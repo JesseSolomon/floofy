@@ -1,6 +1,14 @@
 {
 	"name": "floofy",
+	"version": "2020.10.20",
 	"description": "A tiny and cuddly framework for building simple or lightweight web apps!",
+	"keywords": [
+		"Floofy",
+		"Framework",
+		"Typescript"
+	],
+	"homepage": "https://github.com/JesseSolomon/floofy",
+	"types": "dist/floofly.d.ts",
 	"author": {
 		"email": "jessedsolomon@gmail.com",
 		"name": "Jesse Solomon",
