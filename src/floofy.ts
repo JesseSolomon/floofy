@@ -102,8 +102,6 @@ const floofy = (selector: string, context: ParentNode = document): Floofy => {
 			}
 		}
 
-		console.log(el);
-
 		return el;
 	}
 
