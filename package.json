@@ -8,7 +8,7 @@
 		"Typescript"
 	],
 	"homepage": "https://github.com/JesseSolomon/floofy",
-	"types": "dist/floofly.d.ts",
+	"types": "index.d.ts",
 	"author": {
 		"email": "jessedsolomon@gmail.com",
 		"name": "Jesse Solomon",
