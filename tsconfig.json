@@ -1,0 +1,16 @@
+{
+	"include": [
+		"src"
+	],
+	"compilerOptions": {
+		"outDir": "dist",
+		"target": "ES2020",
+		"module": "None",
+		"declaration": true,
+		"sourceMap": true,
+		"lib": [
+			"DOM",
+			"ES2020"
+		]
+	}
+}

@@ -1,0 +1,13 @@
+{
+	"name": "floofy",
+	"description": "A tiny and cuddly framework for building simple or lightweight web apps!",
+	"author": {
+		"email": "jessedsolomon@gmail.com",
+		"name": "Jesse Solomon",
+		"url": "https://jessedsolomon.com"
+	},
+	"devDependencies": {
+		"@types/node": "^14.11.10",
+		"jsmin": "^1.0.1"
+	}
+}
