@@ -53,7 +53,6 @@ const floofy = (selector, context = document) => {
                 }
             }
         }
-        console.log(el);
         return el;
     };
     Object.defineProperty(floof, "actual", {
