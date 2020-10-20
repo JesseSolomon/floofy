@@ -10,6 +10,8 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 
 ## Example App
 
+[Try it live!](https://codepen.io/SirPandaNugget/pen/ZEOprRG)
+
 ```html
 <div id="counters"></div>
 <button id="add-counter">Add Counter</button>
