@@ -10,16 +10,31 @@ interface Floofy {
     /** Returns the first element which matches the selector, same as _querySelector_ */
     first?: HTMLElement;
 }
+/** Handlers for url-based page selection */
+declare type Page<T = any> = (data: T) => void;
 /** A context for floofy selectors */
 declare type Floofle = {
     [selector: string]: Floofy;
 };
 interface String {
-    /** Convert this string into a floofy selector */
+    /**
+     * Convert this string into a floofy selector
+     * @deprecated
+     * */
     readonly floofy: Floofy;
+    readonly f: Floofy;
 }
 interface HTMLElement {
-    /** Returns this elements floofy context */
+    /**
+     * Returns this elements floofy context
+     * @deprecated
+     * */
     readonly floofle: Floofle;
+    readonly f: Floofle;
 }
-declare const floofy: (selector: string, context?: ParentNode) => Floofy;
+interface Location {
+    readonly f: Page;
+}
+declare function floofy(selector: string, context?: ParentNode): Floofy;
+declare namespace floofy {
+}
