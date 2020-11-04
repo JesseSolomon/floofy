@@ -2,11 +2,6 @@
 
 A tiny and cuddly framework for building simple or lightweight web apps!
 
-### Important notes for update 2020-10-27:
-- `String.prototype.floofy` and `HTMLElement.prototype.floofle` have been deprecated, you should use `.f` instead.
-
-- Fixed bug on `floofly.prototype.new` where it only created new elements, it now matches documented behaviour.
-
 ## Features
 
 - Less than 5kB
@@ -128,10 +123,14 @@ readonly **first** *HTMLElement*
 > `${name}` will match any one segment, and but the segment value into `state[${name}]`
 >
 > `**` will match all subsequent segments until the a different segment is matched
+>
+> ending a selector with `!` will not match any URL's longer than the selector
 
-**get** [url: *string*] => (data: any) => void
+**get** [url: *string*] => (data: any) => (void | () => void)
 
 > Pushes the given `url` to history, then searches for a page as normal. `data` will be joined with `history.state` and any url-based variables.
+>
+> If you return another function, this will be called on pop state.
 
 ### String Prototype
 

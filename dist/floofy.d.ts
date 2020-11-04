@@ -11,25 +11,15 @@ interface Floofy {
     first?: HTMLElement;
 }
 /** Handlers for url-based page selection */
-declare type Page<T = any> = (data: T) => void;
+declare type Page<T = any> = (data: T) => void | (() => void);
 /** A context for floofy selectors */
 declare type Floofle = {
     [selector: string]: Floofy;
 };
 interface String {
-    /**
-     * Convert this string into a floofy selector
-     * @deprecated
-     * */
-    readonly floofy: Floofy;
     readonly f: Floofy;
 }
 interface HTMLElement {
-    /**
-     * Returns this elements floofy context
-     * @deprecated
-     * */
-    readonly floofle: Floofle;
     readonly f: Floofle;
 }
 interface Location {
@@ -37,4 +27,11 @@ interface Location {
 }
 declare function floofy(selector: string, context?: ParentNode): Floofy;
 declare namespace floofy {
+    const element_register: {
+        [selector: string]: {
+            signature: symbol;
+            constructor: (el: HTMLElement) => void;
+        };
+    };
+    const match_element: (el: HTMLElement) => void;
 }

@@ -36,6 +36,7 @@ function floofy(selector, context = document) {
             }
             else {
                 el = parse_element(segment);
+                floofy.match_element(el);
                 next.append(el);
                 next = el;
             }
@@ -51,19 +52,10 @@ function floofy(selector, context = document) {
     Object.defineProperty(floof, "for", {
         get: () => (() => undefined),
         set: (constructor) => {
-            let observer = new MutationObserver(mutations => {
-                for (let mutation of mutations) {
-                    mutation.addedNodes.forEach(node => {
-                        if (node instanceof HTMLElement && node.matches(selector)) {
-                            constructor(node);
-                        }
-                    });
-                }
-            });
-            observer.observe(context, {
-                childList: true,
-                subtree: true
-            });
+            floofy.element_register[selector] = {
+                signature: Symbol("floofy-element"),
+                constructor: constructor
+            };
             if (typeof constructor === "function") {
                 context.querySelectorAll(selector).forEach(element => {
                     if (element instanceof HTMLElement) {
@@ -85,30 +77,33 @@ function floofy(selector, context = document) {
     return floof;
 }
 (function (floofy) {
-    Object.defineProperty(String.prototype, "floofy", {
-        get() {
-            console.warn("String.prototype.floofy is depreciated and may be removed in future versions");
-            return floofy(this);
+    floofy.element_register = {};
+    floofy.match_element = (el) => {
+        for (let selector in floofy.element_register) {
+            if (!(floofy.element_register[selector].signature in el)) {
+                if (el.matches(selector)) {
+                    floofy.element_register[selector].constructor(el);
+                    el[floofy.element_register[selector].signature] = "ready";
+                }
+            }
         }
+    };
+    let observer = new MutationObserver(mutations => {
+        for (let mutation of mutations) {
+            mutation.addedNodes.forEach(node => {
+                if (node instanceof HTMLElement) {
+                    floofy.match_element(node);
+                }
+            });
+        }
+    });
+    observer.observe(document, {
+        childList: true,
+        subtree: true
     });
     Object.defineProperty(String.prototype, "f", {
         get() {
             return floofy(this);
-        }
-    });
-    Object.defineProperty(HTMLElement.prototype, "floofle", {
-        get: function () {
-            console.warn("HTMLElement.prototype.floofle is depreciated and may be removed in future versions");
-            return new Proxy(this, {
-                get: (el, selector) => {
-                    if (typeof selector === "string") {
-                        return floofy(selector, el);
-                    }
-                    else {
-                        throw new TypeError("selector must be of type string");
-                    }
-                }
-            });
         }
     });
     Object.defineProperty(HTMLElement.prototype, "f", {
@@ -126,11 +121,14 @@ function floofy(selector, context = document) {
         }
     });
     let pages = {};
+    let page_stack = [];
     const page_handler = (url) => {
         let segments = url.split("/").filter(seg => seg.length > 0);
         pages: for (let selector in pages) {
-            let selector_segments = selector.split("/").filter(seg => seg.length > 0);
+            let absolute = selector.endsWith("!");
+            let selector_segments = selector.replace(/\!$/, "").split("/").filter(seg => seg.length > 0);
             let selector_index = 0;
+            let processed_indices = 0;
             let url_index = 0;
             let skip = false;
             let state = {};
@@ -140,17 +138,20 @@ function floofy(selector, context = document) {
                 if (selector_segment === segment) {
                     skip = false;
                     selector_index++;
+                    processed_indices++;
                     url_index = Math.min(url_index + 1, segments.length - 1);
                     continue;
                 }
                 else if (selector_segment === "*") {
                     selector_index++;
+                    processed_indices++;
                     url_index = Math.min(url_index + 1, segments.length - 1);
                     continue;
                 }
                 else if (selector_segment.startsWith("$")) {
                     state[selector_segment] = selector_index < segments.length && url_index < segments.length ? decodeURIComponent(segment) : "";
                     selector_index++;
+                    processed_indices++;
                     url_index = Math.min(url_index + 1, segments.length - 1);
                     continue;
                 }
@@ -166,10 +167,18 @@ function floofy(selector, context = document) {
                 else if (!skip) {
                     continue pages;
                 }
+                processed_indices++;
                 url_index = Math.min(url_index + 1, segments.length - 1);
             }
-            return data => pages[selector]({ ...state, ...history.state, ...data });
+            if (absolute && !skip && processed_indices <= segments.length - 1)
+                continue;
+            return data => {
+                let back = pages[selector]({ ...state, ...history.state, ...data });
+                if (typeof back === "function")
+                    page_stack.push(back);
+            };
         }
+        return () => undefined;
     };
     Object.defineProperty(Location.prototype, "f", {
         get: function () {
@@ -194,10 +203,12 @@ function floofy(selector, context = document) {
         }
     });
     document.addEventListener("DOMContentLoaded", () => {
-        let current_page = page_handler(location.pathname);
-        if (current_page)
-            current_page({});
-        addEventListener("popstate", () => page_handler(location.pathname)({}));
+        page_handler(location.pathname)({});
+        addEventListener("popstate", () => {
+            if (page_stack.length > 0)
+                page_stack.pop()({});
+            page_handler(location.pathname)({});
+        });
     });
 })(floofy || (floofy = {}));
 //# sourceMappingURL=floofy.js.map
