@@ -18,5 +18,8 @@
 	"devDependencies": {
 		"@types/node": "^14.11.10",
 		"jsmin": "^1.0.1"
+	},
+	"scripts": {
+		"minify": "jsmin -o dist/floofy.min.js dist/floofy.js"
 	}
 }
