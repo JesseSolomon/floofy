@@ -153,44 +153,46 @@ namespace floofy {
 	export const direct_element = Symbol("element");
 	export const element_register: { [selector: string]: { selector_path: string, signature: symbol, constructor: (el: HTMLElement) => void } } = {};
 
-	export const element_proxy = (element: HTMLElement, selector: string) => new Proxy(element, {
-		getPrototypeOf(target){
-			return Object.getPrototypeOf(target)
-		},
-		has(target, prop) {
-			if (prop === selector_path || prop === direct_element || prop === "f") return true;
-			else return prop in target;
-		},
-		get(target, prop) {
-			if (prop === selector_path) {
-				return selector;
-			}
-			else if (prop === direct_element) {
-				return target;
-			}
-			else if (prop === "f") {
-				return floofy_element(element_proxy(target, selector));
-			}
-			else {
-				let value = target[prop]
+	export const element_proxy = (element: HTMLElement, selector: string) => {
+		if (element && selector) {
+			return new Proxy(element, {
+				getPrototypeOf(target){
+					return Object.getPrototypeOf(target)
+				},
+				has(target, prop) {
+					if (prop === selector_path || prop === direct_element || prop === "f") return true;
+					else return prop in target;
+				},
+				get(target, prop) {
+					if (prop === selector_path) {
+						return selector;
+					}
+					else if (prop === direct_element) {
+						return target;
+					}
+					else {
+						let value = target[prop]
 
-				if (typeof value === "function") {
-					value = Function.prototype.bind.call(value, target);
+						if (typeof value === "function") {
+							value = Function.prototype.bind.call(value, target);
+						}
+
+						return value
+					}
+				},
+				set(target, prop,value) {
+					return target[prop] = value;
+				},
+				apply(target, args) {
+					return Object.apply(target, args)
+				},
+				ownKeys(target) {
+					return Object.keys(target);
 				}
-
-				return value
-			}
-		},
-		set(target, prop,value) {
-			return target[prop] = value;
-		},
-		apply(target, args) {
-			return Object.apply(target, args)
-		},
-		ownKeys(target) {
-			return Object.keys(target);
+			});
 		}
-	});
+		else return element;
+	}
 
 	export const match_element = (el: HTMLElement) => {
 		for (let selector in element_register) {

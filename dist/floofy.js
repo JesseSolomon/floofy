@@ -90,44 +90,50 @@ function floofy(selector, context = document) {
     floofy.selector_path = Symbol("selector");
     floofy.direct_element = Symbol("element");
     floofy.element_register = {};
-    floofy.element_proxy = (element, selector) => new Proxy(element, {
-        getPrototypeOf(target) {
-            return Object.getPrototypeOf(target);
-        },
-        has(target, prop) {
-            if (prop === floofy.selector_path || prop === floofy.direct_element || prop === "f")
-                return true;
-            else
-                return prop in target;
-        },
-        get(target, prop) {
-            if (prop === floofy.selector_path) {
-                return selector;
-            }
-            else if (prop === floofy.direct_element) {
-                return target;
-            }
-            else if (prop === "f") {
-                return floofy_element(floofy.element_proxy(target, selector));
-            }
-            else {
-                let value = target[prop];
-                if (typeof value === "function") {
-                    value = Function.prototype.bind.call(value, target);
+    floofy.element_proxy = (element, selector) => {
+        if (element && selector) {
+            return new Proxy(element, {
+                getPrototypeOf(target) {
+                    return Object.getPrototypeOf(target);
+                },
+                has(target, prop) {
+                    if (prop === floofy.selector_path || prop === floofy.direct_element || prop === "f")
+                        return true;
+                    else
+                        return prop in target;
+                },
+                get(target, prop) {
+                    if (prop === floofy.selector_path) {
+                        return selector;
+                    }
+                    else if (prop === floofy.direct_element) {
+                        return target;
+                    }
+                    else if (prop === "f") {
+                        return floofy_element(floofy.element_proxy(target, selector));
+                    }
+                    else {
+                        let value = target[prop];
+                        if (typeof value === "function") {
+                            value = Function.prototype.bind.call(value, target);
+                        }
+                        return value;
+                    }
+                },
+                set(target, prop, value) {
+                    return target[prop] = value;
+                },
+                apply(target, args) {
+                    return Object.apply(target, args);
+                },
+                ownKeys(target) {
+                    return Object.keys(target);
                 }
-                return value;
-            }
-        },
-        set(target, prop, value) {
-            return target[prop] = value;
-        },
-        apply(target, args) {
-            return Object.apply(target, args);
-        },
-        ownKeys(target) {
-            return Object.keys(target);
+            });
         }
-    });
+        else
+            return element;
+    };
     floofy.match_element = (el) => {
         for (let selector in floofy.element_register) {
             if (!(floofy.element_register[selector].signature in el)) {
