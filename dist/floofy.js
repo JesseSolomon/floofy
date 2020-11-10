@@ -44,21 +44,41 @@ function floofy(selector, context = document) {
         return next;
     };
     Object.defineProperty(floof, "actual", {
-        get: () => select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), false)
+        get: () => {
+            let el = select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), false);
+            el[floofy.parent_selector] = selector;
+            return el;
+        }
     });
     Object.defineProperty(floof, "new", {
-        get: () => select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), true)
+        get: () => {
+            let el = select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), true);
+            el[floofy.parent_selector] = selector;
+            return el;
+        }
     });
     Object.defineProperty(floof, "for", {
         get: () => (() => undefined),
         set: (constructor) => {
-            floofy.element_register[selector] = {
-                signature: Symbol("floofy-element"),
-                constructor: constructor
-            };
+            let contextual_selector = selector;
+            for (let element = context; element instanceof HTMLElement; element = element.parentElement) {
+                if (floofy.parent_selector in element) {
+                    contextual_selector = element[floofy.parent_selector] + " " + contextual_selector;
+                }
+            }
+            if (contextual_selector in floofy.element_register) {
+                throw `Floofy: illegal attempt to overwrite for handler on "${contextual_selector}"`;
+            }
+            else {
+                floofy.element_register[contextual_selector] = {
+                    signature: Symbol("floofy-element"),
+                    constructor: constructor
+                };
+            }
             if (typeof constructor === "function") {
                 context.querySelectorAll(selector).forEach(element => {
                     if (element instanceof HTMLElement) {
+                        element[floofy.parent_selector] = selector;
                         constructor(element);
                     }
                 });
@@ -69,19 +89,30 @@ function floofy(selector, context = document) {
         }
     });
     Object.defineProperty(floof, "all", {
-        get: () => context.querySelectorAll(selector)
+        get: () => Array.from(context.querySelectorAll(selector))
+            .filter(node => node instanceof HTMLElement)
+            .map(el => {
+            el[floofy.parent_selector] = selector;
+            return el;
+        })
     });
     Object.defineProperty(floof, "first", {
-        get: () => context.querySelector(selector)
+        get: () => {
+            let el = context.querySelector(selector);
+            el[floofy.parent_selector] = selector;
+            return el;
+        }
     });
     return floof;
 }
 (function (floofy) {
+    floofy.parent_selector = Symbol("selector");
     floofy.element_register = {};
     floofy.match_element = (el) => {
         for (let selector in floofy.element_register) {
             if (!(floofy.element_register[selector].signature in el)) {
                 if (el.matches(selector)) {
+                    el[floofy.parent_selector] = selector;
                     floofy.element_register[selector].constructor(el);
                     el[floofy.element_register[selector].signature] = "ready";
                 }
@@ -135,38 +166,31 @@ function floofy(selector, context = document) {
             while (selector_index < selector_segments.length) {
                 let segment = segments[url_index];
                 let selector_segment = selector_segments[selector_index];
-                if (selector_segment === segment) {
-                    skip = false;
+                switch (selector_segment) {
+                    case segment:
+                        skip = false;
+                        break;
+                    case "*":
+                        break;
+                    case "**":
+                        skip = true;
+                        break;
+                    default:
+                        if (selector_segment.startsWith("$")) {
+                            state[selector_segment] = selector_index < segments.length && url_index < segments.length ? decodeURIComponent(segment) : "";
+                            skip = false;
+                            break;
+                        }
+                        else if (!skip) {
+                            continue pages;
+                        }
+                }
+                if (skip) {
+                    if (url_index === segments.length - 1)
+                        break;
+                }
+                else
                     selector_index++;
-                    processed_indices++;
-                    url_index = Math.min(url_index + 1, segments.length - 1);
-                    continue;
-                }
-                else if (selector_segment === "*") {
-                    selector_index++;
-                    processed_indices++;
-                    url_index = Math.min(url_index + 1, segments.length - 1);
-                    continue;
-                }
-                else if (selector_segment.startsWith("$")) {
-                    state[selector_segment] = selector_index < segments.length && url_index < segments.length ? decodeURIComponent(segment) : "";
-                    selector_index++;
-                    processed_indices++;
-                    url_index = Math.min(url_index + 1, segments.length - 1);
-                    continue;
-                }
-                else if (selector_segment === "**") {
-                    selector_index++;
-                    skip = true;
-                    url_index = Math.min(url_index + 1, segments.length - 1);
-                    continue;
-                }
-                else if (skip && url_index === segments.length - 1) {
-                    continue pages;
-                }
-                else if (!skip) {
-                    continue pages;
-                }
                 processed_indices++;
                 url_index = Math.min(url_index + 1, segments.length - 1);
             }

@@ -6,7 +6,7 @@ interface Floofy {
     /** Creates as few elements as possible to best matching the selector, unlike `actual`, this will create at least one element regardless of whether it already exists */
     new: HTMLElement;
     /** Returns all elements which match the selector, same as _querySelectorAll_ */
-    all: NodeList;
+    all: HTMLElement[];
     /** Returns the first element which matches the selector, same as _querySelector_ */
     first?: HTMLElement;
 }
@@ -27,6 +27,7 @@ interface Location {
 }
 declare function floofy(selector: string, context?: ParentNode): Floofy;
 declare namespace floofy {
+    const parent_selector: unique symbol;
     const element_register: {
         [selector: string]: {
             signature: symbol;

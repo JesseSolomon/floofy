@@ -1,6 +1,6 @@
 {
 	"name": "floofy",
-	"version": "2020.11.04",
+	"version": "2020.11.10",
 	"description": "A tiny and cuddly framework for building simple or lightweight web apps!",
 	"keywords": [
 		"Floofy",
@@ -17,9 +17,9 @@
 	},
 	"devDependencies": {
 		"@types/node": "^14.11.10",
-		"jsmin": "^1.0.1"
+		"google-closure-compiler": "^20201102.0.1"
 	},
 	"scripts": {
-		"minify": "jsmin -o dist/floofy.min.js dist/floofy.js"
+		"minify": "npx google-closure-compiler --js=dist/floofy.js --js_output_file=dist/floofy.min.js --language_out ECMASCRIPT_2018"
 	}
 }

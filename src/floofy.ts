@@ -9,7 +9,7 @@ interface Floofy {
 	new: HTMLElement;
 
 	/** Returns all elements which match the selector, same as _querySelectorAll_ */
-	all: NodeList;
+	all: HTMLElement[];
 
 	/** Returns the first element which matches the selector, same as _querySelector_ */
 	first?: HTMLElement;
@@ -97,24 +97,51 @@ function floofy(selector: string, context: ParentNode = document): Floofy {
 	}
 
 	Object.defineProperty(floof, "actual", {
-		get: () => select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), false)
+		get: () => {
+			let el = select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), false);
+
+			el[floofy.parent_selector] = selector;
+
+			return el;
+		}
 	});
 	
 	Object.defineProperty(floof, "new", {
-		get: () => select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), true)
+		get: () => {
+			let el = select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), true);
+
+			el[floofy.parent_selector] = selector;
+
+			return el;
+		}
 	});
 	
 	Object.defineProperty(floof, "for", {
 		get: () => (() => undefined),
 		set: (constructor: (el: HTMLElement) => void) => {
-			floofy.element_register[selector] = {
-				signature: Symbol("floofy-element"),
-				constructor: constructor
-			};
+			let contextual_selector = selector;
+
+			for (let element = context; element instanceof HTMLElement; element = element.parentElement) {
+				if (floofy.parent_selector in element) {
+					contextual_selector = element[floofy.parent_selector] + " " + contextual_selector;
+				}
+			}
+
+			if (contextual_selector in floofy.element_register) {
+				throw `Floofy: illegal attempt to overwrite for handler on "${contextual_selector}"`;
+			}
+			else {
+				floofy.element_register[contextual_selector] = {
+					signature: Symbol("floofy-element"),
+					constructor: constructor
+				};
+			}
 
 			if (typeof constructor === "function") {
 				context.querySelectorAll(selector).forEach(element => {
 					if (element instanceof HTMLElement) {
+						element[floofy.parent_selector] = selector;
+
 						constructor(element);
 					}
 				});
@@ -126,23 +153,37 @@ function floofy(selector: string, context: ParentNode = document): Floofy {
 	});
 
 	Object.defineProperty(floof, "all", {
-		get: () => context.querySelectorAll(selector)
+		get: () => Array.from(context.querySelectorAll(selector))
+			.filter(node => node instanceof HTMLElement)
+			.map(el => {
+				el[floofy.parent_selector] = selector;
+				return el;
+			})
 	});
 
 	Object.defineProperty(floof, "first", {
-		get: () => context.querySelector(selector)
+		get: () => {
+			let el = context.querySelector(selector);
+
+			el[floofy.parent_selector] = selector;
+
+			return el;
+		}
 	});
 
 	return floof;
 }
 
 namespace floofy {
+	export const parent_selector = Symbol("selector");
 	export const element_register: { [selector: string]: { signature: symbol, constructor: (el: HTMLElement) => void } } = {};
 
 	export const match_element = (el: HTMLElement) => {
 		for (let selector in element_register) {
 			if (!(element_register[selector].signature in el)) {
 				if (el.matches(selector)) {
+					el[floofy.parent_selector] = selector;
+
 					element_register[selector].constructor(el);
 					el[element_register[selector].signature] = "ready";
 				}
@@ -206,42 +247,30 @@ namespace floofy {
 				let segment = segments[url_index];
 				let selector_segment = selector_segments[selector_index];
 
-				if (selector_segment === segment) {
-					skip = false;
-					selector_index++;
-					processed_indices++;
-					url_index = Math.min(url_index + 1, segments.length - 1);
+				switch (selector_segment) {
+					case segment:
+						skip = false;
+						break;
+					case "*":
+						break;
+					case "**":
+						skip = true;
+						break;
+					default:
+						if (selector_segment.startsWith("$")) {
+							state[selector_segment] = selector_index < segments.length && url_index < segments.length ? decodeURIComponent(segment) : "";
+							skip = false;
+							break;
+						}
+						else if (!skip) {
+							continue pages;
+						}
+				}
 
-					continue;
+				if (skip) {
+					if (url_index === segments.length - 1) break;
 				}
-				else if (selector_segment === "*") {
-					selector_index++;
-					processed_indices++;
-					url_index = Math.min(url_index + 1, segments.length - 1);
-					
-					continue;
-				}
-				else if (selector_segment.startsWith("$")) {
-					state[selector_segment] = selector_index < segments.length && url_index < segments.length ? decodeURIComponent(segment) : "";
-					selector_index++;
-					processed_indices++;
-					url_index = Math.min(url_index + 1, segments.length - 1);
-
-					continue;
-				}
-				else if (selector_segment === "**") {
-					selector_index++;
-					skip = true;
-					url_index = Math.min(url_index + 1, segments.length - 1);
-
-					continue;
-				}
-				else if (skip && url_index === segments.length - 1) {
-					continue pages;
-				}
-				else if (!skip) {
-					continue pages;
-				}
+				else selector_index++;
 
 				processed_indices++;
 				url_index = Math.min(url_index + 1, segments.length - 1);
