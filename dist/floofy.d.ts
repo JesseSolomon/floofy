@@ -21,18 +21,22 @@ interface String {
 }
 interface HTMLElement {
     readonly f: Floofle;
+    [floofy.selector_path]?: string;
 }
 interface Location {
     readonly f: Page;
 }
 declare function floofy(selector: string, context?: ParentNode): Floofy;
 declare namespace floofy {
-    const parent_selector: unique symbol;
+    const selector_path: unique symbol;
+    const direct_element: unique symbol;
     const element_register: {
         [selector: string]: {
+            selector_path: string;
             signature: symbol;
             constructor: (el: HTMLElement) => void;
         };
     };
+    const element_proxy: (element: HTMLElement, selector: string) => any;
     const match_element: (el: HTMLElement) => void;
 }

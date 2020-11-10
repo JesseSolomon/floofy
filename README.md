@@ -8,6 +8,10 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 - Native Typescript comparability
 - Full documentation with examples
 
+## Notes for update 2020-11-10-a
+* Fixed an issue where component declarations were only being set to the global context. (Technical note: this is achieved through a Proxy HTMLElement, while the bindings work as far as I can tell, you can use the `floofy.direct_element` symbol to bypass the Proxy)
+* Switched `Floofy.all` from a `NodeList` to a validated `HTMLElement[]`.
+
 ## Examples
 
 ### Selecting & Creating elements

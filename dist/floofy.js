@@ -1,5 +1,6 @@
 function floofy(selector, context = document) {
     let floof = {};
+    let contextual_selector = (floofy.selector_path in context ? context[floofy.selector_path] + " " : "") + selector;
     const parse_element = (selector) => {
         let el = null;
         selector = selector.replace(/^[\w-_]+/, tag => {
@@ -43,43 +44,30 @@ function floofy(selector, context = document) {
         }
         return next;
     };
+    const meta = (element) => floofy.element_proxy(element, contextual_selector);
     Object.defineProperty(floof, "actual", {
-        get: () => {
-            let el = select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), false);
-            el[floofy.parent_selector] = selector;
-            return el;
-        }
+        get: () => meta(select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), false))
     });
     Object.defineProperty(floof, "new", {
-        get: () => {
-            let el = select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), true);
-            el[floofy.parent_selector] = selector;
-            return el;
-        }
+        get: () => meta(select(selector.split(/[\s>]/g).filter(sel => sel.length > 0), true))
     });
     Object.defineProperty(floof, "for", {
         get: () => (() => undefined),
         set: (constructor) => {
-            let contextual_selector = selector;
-            for (let element = context; element instanceof HTMLElement; element = element.parentElement) {
-                if (floofy.parent_selector in element) {
-                    contextual_selector = element[floofy.parent_selector] + " " + contextual_selector;
-                }
-            }
             if (contextual_selector in floofy.element_register) {
                 throw `Floofy: illegal attempt to overwrite for handler on "${contextual_selector}"`;
             }
             else {
                 floofy.element_register[contextual_selector] = {
                     signature: Symbol("floofy-element"),
+                    selector_path: contextual_selector,
                     constructor: constructor
                 };
             }
             if (typeof constructor === "function") {
                 context.querySelectorAll(selector).forEach(element => {
                     if (element instanceof HTMLElement) {
-                        element[floofy.parent_selector] = selector;
-                        constructor(element);
+                        constructor(meta(element));
                     }
                 });
             }
@@ -91,34 +79,75 @@ function floofy(selector, context = document) {
     Object.defineProperty(floof, "all", {
         get: () => Array.from(context.querySelectorAll(selector))
             .filter(node => node instanceof HTMLElement)
-            .map(el => {
-            el[floofy.parent_selector] = selector;
-            return el;
-        })
+            .map(meta)
     });
     Object.defineProperty(floof, "first", {
-        get: () => {
-            let el = context.querySelector(selector);
-            el[floofy.parent_selector] = selector;
-            return el;
-        }
+        get: () => meta(context.querySelector(selector))
     });
     return floof;
 }
 (function (floofy) {
-    floofy.parent_selector = Symbol("selector");
+    floofy.selector_path = Symbol("selector");
+    floofy.direct_element = Symbol("element");
     floofy.element_register = {};
+    floofy.element_proxy = (element, selector) => new Proxy(element, {
+        getPrototypeOf(target) {
+            return Object.getPrototypeOf(target);
+        },
+        has(target, prop) {
+            if (prop === floofy.selector_path || prop === floofy.direct_element || prop === "f")
+                return true;
+            else
+                return prop in target;
+        },
+        get(target, prop) {
+            if (prop === floofy.selector_path) {
+                return selector;
+            }
+            else if (prop === floofy.direct_element) {
+                return target;
+            }
+            else if (prop === "f") {
+                return floofy_element(floofy.element_proxy(target, selector));
+            }
+            else {
+                let value = target[prop];
+                if (typeof value === "function") {
+                    value = Function.prototype.bind.call(value, target);
+                }
+                return value;
+            }
+        },
+        set(target, prop, value) {
+            return target[prop] = value;
+        },
+        apply(target, args) {
+            return Object.apply(target, args);
+        },
+        ownKeys(target) {
+            return Object.keys(target);
+        }
+    });
     floofy.match_element = (el) => {
         for (let selector in floofy.element_register) {
             if (!(floofy.element_register[selector].signature in el)) {
                 if (el.matches(selector)) {
-                    el[floofy.parent_selector] = selector;
-                    floofy.element_register[selector].constructor(el);
+                    floofy.element_register[selector].constructor(floofy.element_proxy(el, floofy.element_register[selector].selector_path));
                     el[floofy.element_register[selector].signature] = "ready";
                 }
             }
         }
     };
+    const floofy_element = (element) => new Proxy(element, {
+        get: (el, selector) => {
+            if (typeof selector === "string") {
+                return floofy(selector, el);
+            }
+            else {
+                throw new TypeError("selector must be of type string");
+            }
+        }
+    });
     let observer = new MutationObserver(mutations => {
         for (let mutation of mutations) {
             mutation.addedNodes.forEach(node => {
@@ -138,17 +167,8 @@ function floofy(selector, context = document) {
         }
     });
     Object.defineProperty(HTMLElement.prototype, "f", {
-        get: function () {
-            return new Proxy(this, {
-                get: (el, selector) => {
-                    if (typeof selector === "string") {
-                        return floofy(selector, el);
-                    }
-                    else {
-                        throw new TypeError("selector must be of type string");
-                    }
-                }
-            });
+        get() {
+            return floofy_element(this);
         }
     });
     let pages = {};
