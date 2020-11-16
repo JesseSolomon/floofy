@@ -212,11 +212,11 @@ namespace floofy {
 						};
 
 						let regex = "^\\/" + segments.map(seg => {
-							if (seg === "*") return "(?:[\\w\\.\\-%]+)";
+							if (seg === "*") return "(?:[\\w\\.\\-%~:/?#\\[\\]@!$&'\\(\\)*+,;]+)";
 							else if (seg.startsWith("$")) {
 								obj.capture_groups.push(seg);
 
-								return "([\\w\\.\\-%]+)";
+								return "([\\w\\.\\-%~:/?#\\[\\]@!$&'\\(\\)*+,;]+)";
 							}
 							else return seg;
 						}).join("\\/") + "\\/?$";
@@ -248,7 +248,7 @@ namespace floofy {
 									let query = {};
 
 									for (let i = 0; i < page_register[regex].capture_groups.length; i++) {
-										query[page_register[regex].capture_groups[i]] = match[i + 1];
+										query[page_register[regex].capture_groups[i]] = decodeURIComponent(match[i + 1]);
 									}
 
 									let new_state = {

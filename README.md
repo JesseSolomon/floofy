@@ -8,7 +8,7 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 - Native Typescript comparability
 - Full documentation with examples
 
-## Notes for update 2020-11-16
+## Notes for update 2020-11-16-a
 * Removed _Proxy_ implementation due to issues with third part plugins.
 * Removed `**` & `!` page selector options, they caused too much trouble and weren't ever used.
 * floofy now runs on _Node_ instead of _HTMLElement_
@@ -23,7 +23,7 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 <div id="main">
 	<button id="important-button">I'M IMPORTANT</button>
 </div>
-<script src="https://unpkg.com/floofy@2020.11.16/dist/floofy.min.js"></script>
+<script src="https://unpkg.com/floofy@2020.11.16-a/dist/floofy.min.js"></script>
 <script>
 // Create new elements
 "#main h1.heading".f.new.textContent = "Hello world!";
@@ -46,7 +46,7 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 ```html
 <ul id="buttons"></ul>
 <button id="add-button">Add another button</button>
-<script src="https://unpkg.com/floofy@2020.11.16/dist/floofy.min.js"></script>
+<script src="https://unpkg.com/floofy@2020.11.16-a/dist/floofy.min.js"></script>
 <script>
 "#buttons button".f.for = button => {
 	button.textContent = "Hello " + ["world!", "there!", "floofy!"][Math.floor(Math.random() * 3)];
@@ -62,26 +62,18 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 [View on CodePen!](https://codepen.io/SirPandaNugget/pen/pobPYLY)
 
 ```html
-<section id="main" style="display: none">
+<section id="main">
 	<input id="input" type="text" placeholder="Type something here!"/>
 	<button id="submit">Submit</button>
 </section>
-<section id="text" style="display: none"></section>
-<script src="https://unpkg.com/floofy@2020.11.16/dist/floofy.min.js"></script>
+<section id="text"></section>
+<script src="https://unpkg.com/floofy@2020.11.16-a/dist/floofy.min.js"></script>
 <script>
 location.f["/text/$text"] = state => {
-	"section".f.all.forEach(section => section.style.display = "none");
-	"#text".f.first.style.display = "block";
-
 	"#text h1".f.actual.textContent = state.$text;
 }
 
-location.f["/"] = () => {
-	"section".f.all.forEach(section => section.style.display = "none");
-	"#main".f.first.style.display = "block";
-	
-	"#submit".f.first.onclick = () => location.f[`/text/${"#input".f.first.value}`]({});
-}
+"#submit".f.first.onclick = () => location.f[`/text/${encodeURIComponent("#input".f.first.value)}`]({});
 </script>
 ```
 

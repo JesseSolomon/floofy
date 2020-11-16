@@ -148,10 +148,10 @@ function floofy(node, selector) {
                         };
                         let regex = "^\\/" + segments.map(seg => {
                             if (seg === "*")
-                                return "(?:[\\w\\.\\-%]+)";
+                                return "(?:[\\w\\.\\-%~:/?#\\[\\]@!$&'\\(\\)*+,;]+)";
                             else if (seg.startsWith("$")) {
                                 obj.capture_groups.push(seg);
-                                return "([\\w\\.\\-%]+)";
+                                return "([\\w\\.\\-%~:/?#\\[\\]@!$&'\\(\\)*+,;]+)";
                             }
                             else
                                 return seg;
@@ -179,7 +179,7 @@ function floofy(node, selector) {
                                 if (!state || typeof state === "object") {
                                     let query = {};
                                     for (let i = 0; i < floofy.page_register[regex].capture_groups.length; i++) {
-                                        query[floofy.page_register[regex].capture_groups[i]] = match[i + 1];
+                                        query[floofy.page_register[regex].capture_groups[i]] = decodeURIComponent(match[i + 1]);
                                     }
                                     let new_state = {
                                         ...(history.state ?? {}),
