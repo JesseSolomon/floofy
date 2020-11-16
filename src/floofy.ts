@@ -109,15 +109,15 @@ function floofy(node: Node, selector: string): Floofy {
 			});
 
 			// ID
-			generator = generator.replace(/(?<=#)[\w-_]+/g, id => {
-				el.id = id;
+			generator = generator.replace(/#[\w-_]+/g, id => {
+				el.id = id.substr(1);
 	
 				return "";
 			});
 
 			// Class
-			generator = generator.replace(/(?<=\.)[\w-_]+/g, cls => {
-				el.classList.add(cls);
+			generator = generator.replace(/\.[\w-_]+/g, cls => {
+				el.classList.add(cls.substr(1));
 	
 				return "";
 			});
