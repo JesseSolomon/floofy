@@ -1,42 +1,43 @@
 interface Floofy {
     /** Executes the given function on all current and future elements that match the selector */
-    for: (el: HTMLElement) => void;
+    for: (element: HTMLElement) => void;
     /** Returns the requested element, if it doesn't exist, it will be created to best match the selector */
     actual: HTMLElement;
     /** Creates as few elements as possible to best matching the selector, unlike `actual`, this will create at least one element regardless of whether it already exists */
     new: HTMLElement;
-    /** Returns all elements which match the selector, same as _querySelectorAll_ */
+    /** Returns all elements which match the selector, same as _querySelectorAll_ but will only return _HTMLElement_ s */
     all: HTMLElement[];
     /** Returns the first element which matches the selector, same as _querySelector_ */
     first?: HTMLElement;
 }
-/** Handlers for url-based page selection */
-declare type Page<T = any> = (data: T) => void | (() => void);
-/** A context for floofy selectors */
-declare type Floofle = {
-    [selector: string]: Floofy;
-};
 interface String {
     readonly f: Floofy;
 }
-interface HTMLElement {
-    readonly f: Floofle;
-    [floofy.selector_path]?: string;
-}
 interface Location {
-    readonly f: Page;
+    readonly f: {
+        [url: string]: (state: object) => void;
+    };
 }
-declare function floofy(selector: string, context?: ParentNode): Floofy;
-declare namespace floofy {
-    const selector_path: unique symbol;
-    const direct_element: unique symbol;
-    const element_register: {
+interface Node {
+    readonly f: {
+        [selector: string]: Floofy;
+    };
+    [floofy.mutation_observer]?: MutationObserver;
+    [floofy.element_register]?: {
         [selector: string]: {
-            selector_path: string;
             signature: symbol;
             constructor: (el: HTMLElement) => void;
         };
     };
-    const element_proxy: (element: HTMLElement, selector: string) => any;
-    const match_element: (el: HTMLElement) => void;
+}
+declare function floofy(node: Node, selector: string): Floofy;
+declare namespace floofy {
+    const element_register: unique symbol;
+    const mutation_observer: unique symbol;
+    const page_register: {
+        [regex: string]: {
+            capture_groups: string[];
+            handler: (state: object) => void;
+        };
+    };
 }

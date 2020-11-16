@@ -8,9 +8,10 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 - Native Typescript comparability
 - Full documentation with examples
 
-## Notes for update 2020-11-10-a
-* Fixed an issue where component declarations were only being set to the global context. (Technical note: this is achieved through a Proxy HTMLElement, while the bindings work as far as I can tell, you can use the `floofy.direct_element` symbol to bypass the Proxy)
-* Switched `Floofy.all` from a `NodeList` to a validated `HTMLElement[]`.
+## Notes for update 2020-11-16
+* Removed _Proxy_ implementation due to issues with third part plugins.
+* Removed `**` & `!` page selector options, they caused too much trouble and weren't ever used.
+* floofy now runs on _Node_ instead of _HTMLElement_
 
 ## Examples
 
@@ -22,7 +23,7 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 <div id="main">
 	<button id="important-button">I'M IMPORTANT</button>
 </div>
-<script src="https://unpkg.com/floofy@2020.10.27/dist/floofy.min.js"></script>
+<script src="https://unpkg.com/floofy@2020.11.16/dist/floofy.min.js"></script>
 <script>
 // Create new elements
 "#main h1.heading".f.new.textContent = "Hello world!";
@@ -45,7 +46,7 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 ```html
 <ul id="buttons"></ul>
 <button id="add-button">Add another button</button>
-<script src="https://unpkg.com/floofy@2020.10.27/dist/floofy.min.js"></script>
+<script src="https://unpkg.com/floofy@2020.11.16/dist/floofy.min.js"></script>
 <script>
 "#buttons button".f.for = button => {
 	button.textContent = "Hello " + ["world!", "there!", "floofy!"][Math.floor(Math.random() * 3)];
@@ -66,7 +67,7 @@ A tiny and cuddly framework for building simple or lightweight web apps!
 	<button id="submit">Submit</button>
 </section>
 <section id="text" style="display: none"></section>
-<script src="https://unpkg.com/floofy@2020.10.27/dist/floofy.min.js"></script>
+<script src="https://unpkg.com/floofy@2020.11.16/dist/floofy.min.js"></script>
 <script>
 location.f["/text/$text"] = state => {
 	"section".f.all.forEach(section => section.style.display = "none");
@@ -75,7 +76,7 @@ location.f["/text/$text"] = state => {
 	"#text h1".f.actual.textContent = state.$text;
 }
 
-location.f["**"] = () => {
+location.f["/"] = () => {
 	"section".f.all.forEach(section => section.style.display = "none");
 	"#main".f.first.style.display = "block";
 	
@@ -102,19 +103,27 @@ readonly **new** *HTMLElement*
 
 readonly **all** *NodeList*
 
-> Returns all elements which match the selector, same as _querySelectorAll_
+> Returns all elements which match the selector, same as _querySelectorAll_ but will only return _HTMLElement_ s
 
 readonly **first** *HTMLElement*
 
 > Returns the first element which matches the selector, same as _querySelector_
 
-### interface **floofle**
+### String Prototype
 
-[selector: *string*] => *floofy*
+readonly **f** *floofy*
 
-### interface **page**
+> Returns a *floofy* selector from the string
 
-**set** [glob_selector: *string*] => (state: any) => void
+> Note, this is the same as _document.f_ [ **your string** ];
+
+### Node Prototype
+
+**readonly** f: { [selector: *string*] => *floofy* }
+
+### Location Prototype
+
+**set** [glob_selector: *string*] => (state: object) => void
 
 > Is called when the url matches the `glob_selector`, this is checked on page load, or whenever **get** is called.
 
@@ -125,31 +134,9 @@ readonly **first** *HTMLElement*
 > `*` will match any one segment
 > 
 > `${name}` will match any one segment, and but the segment value into `state[${name}]`
->
-> `**` will match all subsequent segments until the a different segment is matched
->
-> ending a selector with `!` will not match any URL's longer than the selector
 
-**get** [url: *string*] => (data: any) => (void | () => void)
+**get** [url: *string*] => (data: object) => (void | () => void)
 
 > Pushes the given `url` to history, then searches for a page as normal. `data` will be joined with `history.state` and any url-based variables.
 >
 > If you return another function, this will be called on pop state.
-
-### String Prototype
-
-readonly **f** *floofy*
-
-> Returns a *floofy* selector from the string
-
-> Note, this is the same as _document.f_ [ **your string** ];
-
-### HTMLElement Prototype
-
-readonly **f**: *floofle*
-
-> Returns a custom floofy context from the element
-
-### Location Prototype
-
-readonly **f**: *page*

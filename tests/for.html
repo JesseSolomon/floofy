@@ -1,0 +1,48 @@
+<!-- Single -->
+<button id="unique">Unique</button>
+
+<!-- Many -->
+<button class="many">Many 1</button>
+<button class="many">Many 2</button>
+<button class="many">Many 3</button>
+
+<!-- New -->
+<ul id="list">
+	<button id="add">Add</button>
+</ul>
+
+<!-- Child-intersection -->
+<div id="type-1">
+	<button class="button">Click me! #1</button>
+</div>
+
+<div id="type-2">
+	<button class="button">Click me! #2</button>
+</div>
+
+<script src="/dist/floofy.js"></script>
+<script>
+	"#unique".f.for = button => button.onclick = () => console.log("Unique!");
+
+	".many".f.for = button => button.onclick = () => console.log(button.textContent);
+
+	"#list li".f.for = li => console.log(li.textContent);
+
+	"#add".f.for = button => {
+		button.onclick = () => {
+			let li = document.createElement("li");
+
+			li.textContent = `List Item <${Math.random()}>`;
+
+			button.parentElement.prepend(li);
+		}
+	}
+
+	"#type-1".f.for = el => {
+		el.f["button"].for = button => button.onclick = () => console.log("Type 1!");
+	}
+
+	"#type-2".f.for = el => {
+		el.f["button"].for = button => button.onclick = () => console.log("Type 2!");
+	}
+</script>

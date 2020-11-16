@@ -1,0 +1,6 @@
+<script src="/dist/floofy.js"></script>
+<script>
+	location.f["tests/state.html"] = () => console.log("Root!");
+
+	location.f["tests/$document"] = state => console.log(state.$document);
+</script>
