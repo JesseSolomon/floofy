@@ -68,7 +68,7 @@ function floofy(node, selector) {
                 return "";
             });
             // Class
-            generator = generator.replace(/(?<=.)[\w-_]+/g, cls => {
+            generator = generator.replace(/(?<=\.)[\w-_]+/g, cls => {
                 el.classList.add(cls);
                 return "";
             });

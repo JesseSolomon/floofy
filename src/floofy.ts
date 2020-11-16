@@ -116,7 +116,7 @@ function floofy(node: Node, selector: string): Floofy {
 			});
 
 			// Class
-			generator = generator.replace(/(?<=.)[\w-_]+/g, cls => {
+			generator = generator.replace(/(?<=\.)[\w-_]+/g, cls => {
 				el.classList.add(cls);
 	
 				return "";
