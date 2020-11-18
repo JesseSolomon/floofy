@@ -115,7 +115,7 @@ readonly **f** *floofy*
 
 ### Location Prototype
 
-**set** [glob_selector: *string*] => (state: object) => void
+**set** [glob_selector: *string*] => (state?: any, title?: string) => void
 
 > Is called when the url matches the `glob_selector`, this is checked on page load, or whenever **get** is called.
 
@@ -127,8 +127,6 @@ readonly **f** *floofy*
 > 
 > `${name}` will match any one segment, and but the segment value into `state[${name}]`
 
-**get** [url: *string*] => (data: object) => (void | () => void)
+**get** [url: *string*] => (data: any) => void
 
 > Pushes the given `url` to history, then searches for a page as normal. `data` will be joined with `history.state` and any url-based variables.
->
-> If you return another function, this will be called on pop state.

@@ -20,7 +20,7 @@ interface String {
 }
 
 interface Location {
-	readonly f: { [url: string]: (state: object) => void };
+	readonly f: { [url: string]: (state?: any, title?: string) => void };
 }
 
 interface Node {
@@ -273,7 +273,7 @@ namespace floofy {
 						let match = url.match(new RegExp(regex));
 
 						if (match) {
-							return state => {
+							return (state, title) => {
 								if (!state || typeof state === "object") {
 									let query = {};
 
@@ -288,7 +288,7 @@ namespace floofy {
 									};
 
 									if (location.pathname !== url) {
-										history.pushState(new_state, document.title, url);
+										history.pushState(new_state, title ?? document.title, url);
 									}
 
 									page_register[regex].handler(new_state);
@@ -300,7 +300,16 @@ namespace floofy {
 						}
 					}
 
-					return null;
+					return (state, title) => {
+						let new_state = {
+							...(history.state ?? {}),
+							...(state ?? {})
+						};
+
+						if (location.pathname !== url) {
+							history.pushState(new_state, title ?? document.title, url);
+						}
+					};
 				}
 				else {
 					throw `Floofy Exception: URL selector must be of type string, got ${typeof url}`;
@@ -310,14 +319,10 @@ namespace floofy {
 	});
 
 	addEventListener("DOMContentLoaded", () => {
-		let current_page = location.f[location.pathname];
-
-		if (current_page) current_page({});
+		location.f[location.pathname]();
 
 		addEventListener("popstate", () => {
-			let page = location.f[location.pathname];
-
-			if (page) page({});
+			location.f[location.pathname]();
 		});
 	});
 }

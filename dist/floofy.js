@@ -86,7 +86,6 @@ function floofy(node, selector) {
             do {
                 crawl = crawl.parentElement || document;
                 if (floofy.mutation_observer in crawl && floofy.mutation_update in crawl[floofy.mutation_observer]) {
-                    console.log("mutate");
                     if (crawl[floofy.mutation_observer][floofy.mutation_update]([target])[0])
                         break;
                 }
@@ -193,7 +192,7 @@ function floofy(node, selector) {
                     for (let regex in floofy.page_register) {
                         let match = url.match(new RegExp(regex));
                         if (match) {
-                            return state => {
+                            return (state, title) => {
                                 if (!state || typeof state === "object") {
                                     let query = {};
                                     for (let i = 0; i < floofy.page_register[regex].capture_groups.length; i++) {
@@ -205,7 +204,7 @@ function floofy(node, selector) {
                                         ...query
                                     };
                                     if (location.pathname !== url) {
-                                        history.pushState(new_state, document.title, url);
+                                        history.pushState(new_state, title ?? document.title, url);
                                     }
                                     floofy.page_register[regex].handler(new_state);
                                 }
@@ -215,7 +214,15 @@ function floofy(node, selector) {
                             };
                         }
                     }
-                    return null;
+                    return (state, title) => {
+                        let new_state = {
+                            ...(history.state ?? {}),
+                            ...(state ?? {})
+                        };
+                        if (location.pathname !== url) {
+                            history.pushState(new_state, title ?? document.title, url);
+                        }
+                    };
                 }
                 else {
                     throw `Floofy Exception: URL selector must be of type string, got ${typeof url}`;
@@ -224,13 +231,9 @@ function floofy(node, selector) {
         })
     });
     addEventListener("DOMContentLoaded", () => {
-        let current_page = location.f[location.pathname];
-        if (current_page)
-            current_page({});
+        location.f[location.pathname]();
         addEventListener("popstate", () => {
-            let page = location.f[location.pathname];
-            if (page)
-                page({});
+            location.f[location.pathname]();
         });
     });
 })(floofy || (floofy = {}));

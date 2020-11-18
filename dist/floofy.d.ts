@@ -15,7 +15,7 @@ interface String {
 }
 interface Location {
     readonly f: {
-        [url: string]: (state: object) => void;
+        [url: string]: (state?: any, title?: string) => void;
     };
 }
 interface Node {
