@@ -1,0 +1,12 @@
+<body>
+	<script src="/dist/floofy.js"></script>
+	<script>
+		".test".f.for = test => test.show_message = () => test.textContent = `Hello world! <${Math.random()}>`;
+
+		"body .thing".f.actual.f[".no"].for = thing => thing.show_message = () => console.error("NO!");
+
+		"body .thing .test".f.actual.show_message();
+		"body .test".f.new.show_message();
+		"body .thing .no".f.actual.textContent = "good no";
+	</script>
+</body>

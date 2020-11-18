@@ -30,6 +30,10 @@ interface Node {
 	[floofy.element_register]?: { [selector: string]: { signature: symbol, constructor: (el: HTMLElement) => void; } };
 }
 
+interface MutationObserver {
+	[floofy.mutation_update]?: (elements: HTMLElement[]) => boolean[];
+}
+
 function floofy(node: Node, selector: string): Floofy {
 	const floof: Floofy = {} as any;
 	let element_register: { [selector: string]: { signature: symbol, constructor: (el: HTMLElement) => void; } };
@@ -48,16 +52,7 @@ function floofy(node: Node, selector: string): Floofy {
 	else {
 		observer = new MutationObserver(mutations => {
 			for (let mutation of mutations) {
-				for (let node of Array.from(mutation.addedNodes)) {
-					if (node instanceof HTMLElement) {
-						for (let selector in element_register) {
-							if (!(element_register[selector].signature in node) && node.matches(selector)) {
-								node[element_register[selector].signature] = true;
-								element_register[selector].constructor(node);
-							}
-						}
-					}
-				}
+				observer[floofy.mutation_update](Array.from(mutation.addedNodes).filter(node => node instanceof HTMLElement) as HTMLElement[]);
 			}
 		});
 
@@ -65,6 +60,26 @@ function floofy(node: Node, selector: string): Floofy {
 			childList: true,
 			subtree: true
 		});
+
+		observer[floofy.mutation_update] = elements => {
+			let matches: boolean[] = [];
+
+			all:
+			for (let element of elements) {
+				for (let selector in element_register) {
+					if (!(element_register[selector].signature in element) && element.matches(selector)) {
+						element[element_register[selector].signature] = true;
+						element_register[selector].constructor(element);
+						matches.push(true);
+						continue all;
+					}
+				}
+
+				matches.push(false);
+			}
+
+			return matches;
+		}
 
 		node[floofy.mutation_observer] = observer;
 	}
@@ -127,6 +142,20 @@ function floofy(node: Node, selector: string): Floofy {
 			target = el;
 		}
 
+		if (target instanceof HTMLElement) {
+			let crawl: Node = target;
+
+			do {
+				crawl = crawl.parentElement || document;
+				
+				if (floofy.mutation_observer in crawl && floofy.mutation_update in crawl[floofy.mutation_observer]) {
+					if (crawl[floofy.mutation_observer][floofy.mutation_update]([target])[0])
+						break;
+				}
+			}
+			while (!crawl.isSameNode(document));
+		}
+
 		return target instanceof HTMLElement ? target : undefined;
 	}
 
@@ -177,6 +206,7 @@ function floofy(node: Node, selector: string): Floofy {
 namespace floofy {
 	export const element_register = Symbol("element_register");
 	export const mutation_observer = Symbol("mutation_observer");
+	export const mutation_update = Symbol("mutation_update");
 	export const page_register: { [regex: string]: { capture_groups: string[], handler: (state: object) => void } } = {};
 
 	Object.defineProperty(String.prototype, "f", {

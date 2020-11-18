@@ -30,10 +30,14 @@ interface Node {
         };
     };
 }
+interface MutationObserver {
+    [floofy.mutation_update]?: (elements: HTMLElement[]) => boolean[];
+}
 declare function floofy(node: Node, selector: string): Floofy;
 declare namespace floofy {
     const element_register: unique symbol;
     const mutation_observer: unique symbol;
+    const mutation_update: unique symbol;
     const page_register: {
         [regex: string]: {
             capture_groups: string[];
