@@ -165,7 +165,7 @@ function floofy(node, selector) {
                         };
                         let regex = "^\\/" + segments.map(seg => {
                             if (seg === "*")
-                                return "(?:[\\w\\.\\-%~:/?#\\[\\]@!$&'\\(\\)*+,;]+)";
+                                return "(?:[\\w\\.\\-%~:?#\\[\\]@!$&'\\(\\)*+,;]+)";
                             else if (seg.startsWith("$")) {
                                 obj.capture_groups.push(seg);
                                 return "([\\w\\.\\-%~:?#\\[\\]@!$&'\\(\\)*+,;]+)";
@@ -206,6 +206,8 @@ function floofy(node, selector) {
                                     if (location.pathname !== url) {
                                         history.pushState(new_state, title ?? document.title, url);
                                     }
+                                    if (title && document.title !== title)
+                                        document.title = title;
                                     floofy.page_register[regex].handler(new_state);
                                 }
                                 else {
@@ -222,6 +224,8 @@ function floofy(node, selector) {
                         if (location.pathname !== url) {
                             history.pushState(new_state, title ?? document.title, url);
                         }
+                        if (title && document.title !== title)
+                            document.title = title;
                     };
                 }
                 else {

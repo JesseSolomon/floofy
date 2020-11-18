@@ -291,6 +291,8 @@ namespace floofy {
 										history.pushState(new_state, title ?? document.title, url);
 									}
 
+									if (title && document.title !== title) document.title = title;
+
 									page_register[regex].handler(new_state);
 								}
 								else {
@@ -309,6 +311,8 @@ namespace floofy {
 						if (location.pathname !== url) {
 							history.pushState(new_state, title ?? document.title, url);
 						}
+
+						if (title && document.title !== title) document.title = title;
 					};
 				}
 				else {
