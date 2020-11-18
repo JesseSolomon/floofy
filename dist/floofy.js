@@ -168,7 +168,7 @@ function floofy(node, selector) {
                                 return "(?:[\\w\\.\\-%~:/?#\\[\\]@!$&'\\(\\)*+,;]+)";
                             else if (seg.startsWith("$")) {
                                 obj.capture_groups.push(seg);
-                                return "([\\w\\.\\-%~:/?#\\[\\]@!$&'\\(\\)*+,;]+)";
+                                return "([\\w\\.\\-%~:?#\\[\\]@!$&'\\(\\)*+,;]+)";
                             }
                             else
                                 return seg;

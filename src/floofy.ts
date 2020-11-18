@@ -242,11 +242,11 @@ namespace floofy {
 						};
 
 						let regex = "^\\/" + segments.map(seg => {
-							if (seg === "*") return "(?:[\\w\\.\\-%~:/?#\\[\\]@!$&'\\(\\)*+,;]+)";
+							if (seg === "*") return "(?:[\\w\\.\\-%~:?#\\[\\]@!$&'\\(\\)*+,;]+)";
 							else if (seg.startsWith("$")) {
 								obj.capture_groups.push(seg);
 
-								return "([\\w\\.\\-%~:/?#\\[\\]@!$&'\\(\\)*+,;]+)";
+								return "([\\w\\.\\-%~:?#\\[\\]@!$&'\\(\\)*+,;]+)";
 							}
 							else return seg;
 						}).join("\\/") + "\\/?$";
